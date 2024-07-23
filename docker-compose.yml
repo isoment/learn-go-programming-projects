@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: go-projects
+    ports:
+      - "33061:3306"
+    volumes:
+      - ./database/mysql:/var/lib/mysql
+    networks:
+      - eleven-go-projects
+
+networks:
+  eleven-go-projects:
+    driver: bridge
