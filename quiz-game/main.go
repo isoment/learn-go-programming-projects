@@ -14,11 +14,26 @@ type ProblemSolution struct {
 }
 
 func main() {
-	fileName := flag.String("fileName", "problems.csv", "Specify the name of the input CSV, the default is problems.csv")
+	fileName := flag.String("fileName", "problems32.csv", "Specify the name of the input CSV, the default is problems.csv")
 	// timer := flag.Int("timer", 30, "The time limit for each question")
-	// shuffle := flag.Bool("sufffle", false, "Boolean value to shuffle the quiz questions")
+	// shuffle := flag.Bool("shuffle", false, "Boolean value to shuffle the quiz questions")
 
-	f, err := os.Open(*fileName)
+	var totalQuestions, correctAnswers int
+
+	problemSolutionList := processFile(*fileName)
+
+	for _, question := range problemSolutionList {
+		totalQuestions += 1
+	}
+
+	fmt.Printf("%+v\n", problemSolutionList)
+}
+
+/*
+Open the problem solution csv file and parse it into a slice of ProblemSolution structs.
+*/
+func processFile(fileName string) []ProblemSolution {
+	f, err := os.Open(fileName)
 	if err != nil {
 		log.Fatalf("There was an error parsing the CSV file: %d", err)
 	}
@@ -47,5 +62,5 @@ func main() {
 		}
 	}
 
-	fmt.Printf("%+v\n", problemSolutionList)
+	return problemSolutionList
 }
