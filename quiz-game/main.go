@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"encoding/csv"
 	"flag"
 	"fmt"
 	"log"
 	"os"
+	"strings"
 )
 
 type ProblemSolution struct {
@@ -14,19 +16,33 @@ type ProblemSolution struct {
 }
 
 func main() {
-	fileName := flag.String("fileName", "problems32.csv", "Specify the name of the input CSV, the default is problems.csv")
+	fileName := flag.String("fileName", "problems.csv", "Specify the name of the input CSV, the default is problems.csv")
 	// timer := flag.Int("timer", 30, "The time limit for each question")
 	// shuffle := flag.Bool("shuffle", false, "Boolean value to shuffle the quiz questions")
 
-	var totalQuestions, correctAnswers int
-
 	problemSolutionList := processFile(*fileName)
 
-	for _, question := range problemSolutionList {
-		totalQuestions += 1
-	}
+	totalQuestions := len(problemSolutionList)
+	correctAnswers := 0
 
-	fmt.Printf("%+v\n", problemSolutionList)
+	quizUser(problemSolutionList, &correctAnswers)
+
+	fmt.Printf("There were %+v total questions\n", totalQuestions)
+	fmt.Printf("You answered %+v correctly\n", correctAnswers)
+}
+
+func quizUser(problemSolutionList []ProblemSolution, correctAnswers *int) {
+	for _, p := range problemSolutionList {
+		fmt.Print(p.Problem)
+
+		scanner := bufio.NewScanner(os.Stdin)
+		scanner.Scan()
+		input := strings.TrimSpace(scanner.Text())
+
+		if input == p.Solution {
+			*correctAnswers += 1
+		}
+	}
 }
 
 /*
