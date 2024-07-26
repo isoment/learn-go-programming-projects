@@ -2,12 +2,14 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"encoding/csv"
 	"flag"
 	"fmt"
 	"log"
 	"os"
 	"strings"
+	"time"
 )
 
 type ProblemSolution struct {
@@ -17,18 +19,33 @@ type ProblemSolution struct {
 
 func main() {
 	fileName := flag.String("fileName", "problems.csv", "Specify the name of the input CSV, the default is problems.csv")
-	timer := flag.Int("timer", 30, "The time limit for each question")
+	timeLimit := flag.Int("timeLimit", 30, "The time limit for each question")
 	// shuffle := flag.Bool("shuffle", false, "Boolean value to shuffle the quiz questions")
+	flag.Parse()
 
-	begin := begin(*timer)
+	problemSolutionList := processFile(*fileName)
+
+	begin := begin(*timeLimit)
 
 	if begin {
-		problemSolutionList := processFile(*fileName)
-
 		totalQuestions := len(problemSolutionList)
 		correctAnswers := 0
 
-		quizUser(problemSolutionList, &correctAnswers)
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		t := time.NewTimer(time.Duration(*timeLimit) * time.Second)
+		done := make(chan bool)
+
+		go quizUser(ctx, problemSolutionList, &correctAnswers, done)
+
+		select {
+		case <-t.C:
+			fmt.Println("\nTime's up!")
+			cancel()
+		case <-done:
+			fmt.Println("\nQuiz completed!")
+		}
 
 		fmt.Printf("There were %+v total questions\n", totalQuestions)
 		fmt.Printf("You answered %+v correctly\n", correctAnswers)
@@ -37,8 +54,11 @@ func main() {
 	}
 }
 
+/*
+Prompt the user to begin the game
+*/
 func begin(time int) bool {
-	fmt.Printf("Please type `go` to start the quiz, you will have: %v seconds\n", time)
+	fmt.Printf("Please type 'go' to start the quiz, you will have: %v seconds\n", time)
 	scanner := bufio.NewScanner(os.Stdin)
 	scanner.Scan()
 	input := scanner.Text()
@@ -46,18 +66,38 @@ func begin(time int) bool {
 	return input == "go"
 }
 
-func quizUser(problemSolutionList []ProblemSolution, correctAnswers *int) {
+/*
+Display each question to the user and check if the given answer is correct
+*/
+func quizUser(ctx context.Context, problemSolutionList []ProblemSolution, correctAnswers *int, done chan bool) {
+	inputChan := make(chan string)
+
+	go func() {
+		scanner := bufio.NewScanner(os.Stdin)
+		for {
+			scanner.Scan()
+			inputChan <- scanner.Text()
+		}
+	}()
+
 	for _, p := range problemSolutionList {
 		fmt.Print(p.Problem)
 
-		scanner := bufio.NewScanner(os.Stdin)
-		scanner.Scan()
-		input := strings.TrimSpace(scanner.Text())
-
-		if input == p.Solution {
-			*correctAnswers += 1
+		select {
+		case <-ctx.Done():
+			// If context is cancelled, exit the function
+			done <- true
+			return
+		case input := <-inputChan:
+			input = strings.TrimSpace(input)
+			if input == p.Solution {
+				*correctAnswers += 1
+			}
 		}
 	}
+
+	// Signal that the quiz is done
+	done <- true
 }
 
 /*
