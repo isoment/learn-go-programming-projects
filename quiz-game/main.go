@@ -7,6 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"strings"
 	"time"
@@ -20,9 +21,7 @@ type ProblemSolution struct {
 func main() {
 	fileName, timeLimit, shuffle := parseFlags()
 
-	fmt.Printf("Suffle: %v\n", shuffle)
-
-	problemSolutionList := processFile(fileName)
+	problemSolutionList := processFile(fileName, shuffle)
 
 	promptUserToBegin(timeLimit)
 
@@ -113,7 +112,7 @@ func quizUser(ctx context.Context, problemSolutionList []ProblemSolution, correc
 /*
 Open the problem solution csv file and parse it into a slice of ProblemSolution structs.
 */
-func processFile(fileName string) []ProblemSolution {
+func processFile(fileName string, shuffle bool) []ProblemSolution {
 	f, err := os.Open(fileName)
 	if err != nil {
 		log.Fatalf("There was an error parsing the CSV file: %d", err)
@@ -141,5 +140,22 @@ func processFile(fileName string) []ProblemSolution {
 		problemSolutionList = append(problemSolutionList, record)
 	}
 
+	if shuffle {
+		shuffleSlice(problemSolutionList)
+	}
+
 	return problemSolutionList
+}
+
+/*
+Shuffle the elements in a slice in place.
+We use rand.New() to create a new random number generator whose source of randomness
+is the current time in nanoseconds. The Shuffle() method takes the length of the slice
+and a function for swapping the elements at position i and j.
+*/
+func shuffleSlice(slice []ProblemSolution) {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	r.Shuffle(len(slice), func(i, j int) {
+		slice[i], slice[j] = slice[j], slice[i]
+	})
 }
