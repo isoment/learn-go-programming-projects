@@ -98,8 +98,7 @@ func quizUser(ctx context.Context, problemSolutionList []ProblemSolution, correc
 			done <- true
 			return
 		case input := <-inputChan:
-			input = strings.TrimSpace(input)
-			if input == p.Solution {
+			if normalizeString(input) == normalizeString(p.Solution) {
 				*correctAnswers += 1
 			}
 		}
@@ -158,4 +157,11 @@ func shuffleSlice(slice []ProblemSolution) {
 	r.Shuffle(len(slice), func(i, j int) {
 		slice[i], slice[j] = slice[j], slice[i]
 	})
+}
+
+/*
+Convert the string to lowercase and trim any excess space from the left and right.
+*/
+func normalizeString(s string) string {
+	return strings.TrimSpace(strings.ToLower(s))
 }
