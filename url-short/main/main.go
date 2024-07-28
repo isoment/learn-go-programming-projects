@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"net/http"
+	"os"
 
 	"github.com/isoment/urlshort"
 )
@@ -18,15 +20,15 @@ func main() {
 	// Build the MapHandler using the mux as the fallback
 	mapHandler := urlshort.MapHandler(pathsToUrls, mux)
 
-	yaml := `
-- path: /urlshort
-  url: https://github.com/gophercises/urlshort
-- path: /urlshort-final
-  url: https://github.com/gophercises/urlshort/tree/solution
-`
+	filePath := "paths.yml"
+
+	content, err := processFile(filePath)
+	if err != nil {
+		panic(err)
+	}
 
 	// Build the YAMLHandler using the mapHandler as the fallback
-	yamlHandler, err := urlshort.YAMLHandler([]byte(yaml), mapHandler)
+	yamlHandler, err := urlshort.YAMLHandler(content, mapHandler)
 	if err != nil {
 		panic(err)
 	}
@@ -43,4 +45,20 @@ func defaultMux() *http.ServeMux {
 
 func hello(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "Hello, world!")
+}
+
+func processFile(path string) ([]byte, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+
+	defer file.Close()
+
+	content, err := io.ReadAll(file)
+	if err != nil {
+		return nil, err
+	}
+
+	return content, nil
 }
