@@ -1,8 +1,10 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 
@@ -20,11 +22,11 @@ func main() {
 	// Build the MapHandler using the mux as the fallback
 	mapHandler := urlshort.MapHandler(pathsToUrls, mux)
 
-	filePath := "paths.yml"
+	path := initFlags()
 
-	content, err := processFile(filePath)
+	content, err := processFile(path)
 	if err != nil {
-		panic(err)
+		log.Printf("Error processing yaml file: %v", err)
 	}
 
 	// Build the YAMLHandler using the mapHandler as the fallback
@@ -45,6 +47,13 @@ func defaultMux() *http.ServeMux {
 
 func hello(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "Hello, world!")
+}
+
+func initFlags() string {
+	filePath := flag.String("filePath", "paths.yml", "The location of the yaml to parse")
+	flag.Parse()
+
+	return *filePath
 }
 
 func processFile(path string) ([]byte, error) {
