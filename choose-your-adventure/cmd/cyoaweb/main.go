@@ -1,9 +1,10 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
+	"log"
+	"net/http"
 	"os"
 
 	"github.com/isoment/chooseyouradventure"
@@ -11,6 +12,7 @@ import (
 
 func main() {
 	file := flag.String("file", "gopher.json", "The json file that contains the story")
+	port := flag.Int("port", 3000, "the port to serve the application on")
 	flag.Parse()
 
 	fmt.Printf("Using the story in %s.\n", *file)
@@ -20,11 +22,14 @@ func main() {
 		panic(err)
 	}
 
-	d := json.NewDecoder(f)
-	var story chooseyouradventure.Story
-	if err := d.Decode(&story); err != nil {
+	story, err := chooseyouradventure.JsonStory(f)
+	if err != nil {
 		panic(err)
 	}
+
+	h := chooseyouradventure.NewHandler(story)
+	fmt.Printf("Starting the server on port: %d\n", *port)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", *port), h))
 
 	fmt.Printf("%+v\n", story)
 }
