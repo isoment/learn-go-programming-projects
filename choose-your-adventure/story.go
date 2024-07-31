@@ -22,11 +22,7 @@ type Option struct {
 	Chapter string `json:"arc"`
 }
 
-type handler struct {
-	s Story
-}
-
-var defaultHandlerTemplate = `
+var DefaultHandlerTemplate = `
 <!DOCTYPE html>
 <html>
   <head>
@@ -106,11 +102,28 @@ func JsonStory(r io.Reader) (Story, error) {
 var tpl *template.Template
 
 func init() {
-	tpl = template.Must(template.New("").Parse(defaultHandlerTemplate))
+	tpl = template.Must(template.New("").Parse(DefaultHandlerTemplate))
 }
 
-func NewHandler(s Story) http.Handler {
-	return handler{s}
+type handler struct {
+	s Story
+	t *template.Template
+}
+
+type HandlerOption func(h *handler)
+
+func WithTemplate(t *template.Template) HandlerOption {
+	return func(h *handler) {
+		h.t = t
+	}
+}
+
+func NewHandler(s Story, opts ...HandlerOption) http.Handler {
+	h := handler{s, tpl}
+	for _, opt := range opts {
+		opt(&h)
+	}
+	return h
 }
 
 func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -124,7 +137,7 @@ func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// We can use ok to check that the value actually exists in the map.
 	if chapter, ok := h.s[path]; ok {
-		err := tpl.Execute(w, chapter)
+		err := h.t.Execute(w, chapter)
 		if err != nil {
 			log.Printf("%v", err)
 			http.Error(w, "Something went wrong", http.StatusInternalServerError)

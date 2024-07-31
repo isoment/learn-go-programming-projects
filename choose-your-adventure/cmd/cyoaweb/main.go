@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -27,7 +28,9 @@ func main() {
 		panic(err)
 	}
 
-	h := chooseyouradventure.NewHandler(story)
+	// Customize the template by parsing it
+	tpl := template.Must(template.New("").Parse(chooseyouradventure.DefaultHandlerTemplate))
+	h := chooseyouradventure.NewHandler(story, chooseyouradventure.WithTemplate(tpl))
 	fmt.Printf("Starting the server on port: %d\n", *port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", *port), h))
 
