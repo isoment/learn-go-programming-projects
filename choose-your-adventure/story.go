@@ -106,8 +106,18 @@ func init() {
 }
 
 type handler struct {
-	s Story
-	t *template.Template
+	s      Story
+	t      *template.Template
+	pathFn func(r *http.Request) string
+}
+
+func defaultPathFn(r *http.Request) string {
+	path := strings.TrimSpace(r.URL.Path)
+	if path == "" || path == "/" {
+		path = "/intro"
+	}
+	// Omit the first char of the path.
+	return path[1:]
 }
 
 type HandlerOption func(h *handler)
@@ -118,8 +128,14 @@ func WithTemplate(t *template.Template) HandlerOption {
 	}
 }
 
+func WithPathFunc(fn func(r *http.Request) string) HandlerOption {
+	return func(h *handler) {
+		h.pathFn = fn
+	}
+}
+
 func NewHandler(s Story, opts ...HandlerOption) http.Handler {
-	h := handler{s, tpl}
+	h := handler{s, tpl, defaultPathFn}
 	for _, opt := range opts {
 		opt(&h)
 	}
@@ -127,14 +143,7 @@ func NewHandler(s Story, opts ...HandlerOption) http.Handler {
 }
 
 func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	path := strings.TrimSpace(r.URL.Path)
-	if path == "" || path == "/" {
-		path = "/intro"
-	}
-
-	// Omit the first char of the path.
-	path = path[1:]
-
+	path := h.pathFn(r)
 	// We can use ok to check that the value actually exists in the map.
 	if chapter, ok := h.s[path]; ok {
 		err := h.t.Execute(w, chapter)
