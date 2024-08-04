@@ -1,8 +1,8 @@
 package parselink
 
 import (
-	"fmt"
 	"io"
+	"strings"
 
 	"golang.org/x/net/html"
 )
@@ -20,13 +20,53 @@ func Parse(r io.Reader) ([]Link, error) {
 	}
 
 	nodes := linkNodes(doc)
+	var links []Link
+
 	for _, node := range nodes {
-		fmt.Println(node)
+		links = append(links, buildLink(node))
 	}
 
-	return nil, nil
+	return links, nil
 }
 
+func buildLink(n *html.Node) Link {
+	var ret Link
+
+	for _, attr := range n.Attr {
+		if attr.Key == "href" {
+			ret.Href = attr.Val
+			break
+		}
+	}
+
+	ret.Text = text(n)
+
+	return ret
+}
+
+/*
+Within the link element text there can be more nested html.
+*/
+func text(n *html.Node) string {
+	if n.Type == html.TextNode {
+		return n.Data
+	}
+	if n.Type != html.ElementNode {
+		return ""
+	}
+	var ret string
+	for c := n.FirstChild; c != nil; c = c.NextSibling {
+		ret += text(c)
+	}
+
+	clean := strings.Join(strings.Fields(ret), " ")
+
+	return clean
+}
+
+/*
+Recursively traverse the HTML tree looking for link elements.
+*/
 func linkNodes(n *html.Node) []*html.Node {
 	if n.Type == html.ElementNode && n.Data == "a" {
 		return []*html.Node{n}
