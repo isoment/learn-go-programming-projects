@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -25,7 +26,15 @@ func main() {
 		- Export the sitemap to an XML file
 	*/
 
-	resp, err := http.Get(*urlFlag)
+	urls := get(*urlFlag)
+
+	for _, href := range urls {
+		fmt.Println(href)
+	}
+}
+
+func get(urlStr string) []string {
+	resp, err := http.Get(urlStr)
 	if err != nil {
 		panic(err)
 	}
@@ -42,21 +51,22 @@ func main() {
 	}
 	base := baseURL.String()
 
-	links, _ := link.Parse(resp.Body)
+	return href(resp.Body, base)
+}
 
-	var hrefs []string
+func href(r io.Reader, base string) []string {
+	links, _ := link.Parse(r)
+	var urls []string
 
 	// Filter the original links and get the full URLs
 	for _, l := range links {
 		switch {
 		case strings.HasPrefix(l.Href, "/"):
-			hrefs = append(hrefs, base+l.Href)
+			urls = append(urls, base+l.Href)
 		case strings.HasPrefix(l.Href, "http"):
-			hrefs = append(hrefs, l.Href)
+			urls = append(urls, l.Href)
 		}
 	}
 
-	for _, href := range hrefs {
-		fmt.Println(href)
-	}
+	return urls
 }
