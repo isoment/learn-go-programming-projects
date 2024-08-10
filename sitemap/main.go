@@ -51,7 +51,7 @@ func get(urlStr string) []string {
 	}
 	base := baseURL.String()
 
-	return href(resp.Body, base)
+	return filter(href(resp.Body, base), withPrefix(base))
 }
 
 func href(r io.Reader, base string) []string {
@@ -69,4 +69,29 @@ func href(r io.Reader, base string) []string {
 	}
 
 	return urls
+}
+
+/*
+Second argument is a function that we can use to filter.
+*/
+func filter(links []string, keepFn func(string) bool) []string {
+	var filtered []string
+
+	for _, link := range links {
+		// Only keep those links which match the given base
+		if keepFn(link) {
+			filtered = append(filtered, link)
+		}
+	}
+
+	return filtered
+}
+
+/*
+Function to check if a link has a given prefix (domain)
+*/
+func withPrefix(prefix string) func(string) bool {
+	return func(link string) bool {
+		return strings.HasPrefix(link, prefix)
+	}
 }
