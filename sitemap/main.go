@@ -1,15 +1,28 @@
 package main
 
 import (
+	"encoding/xml"
 	"flag"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/isoment/sitemap/pkg/link"
 )
+
+const xmlNs = "http://www.sitemaps.org/schemas/sitemap/0.9"
+
+type loc struct {
+	Value string `xml:"loc"`
+}
+
+type urlset struct {
+	Urls  []loc  `xml:"url"`
+	Xmlns string `xml:"xmlns,attr"`
+}
 
 func main() {
 	urlFlag := flag.String("url", "https://gophercises.com", "URL to build a sitemap for")
@@ -27,8 +40,20 @@ func main() {
 
 	urls := bfs(*urlFlag, *maxDepth)
 
-	for _, url := range urls {
-		fmt.Println(url)
+	toXml := urlset{
+		Xmlns: xmlNs,
+	}
+
+	for _, u := range urls {
+		toXml.Urls = append(toXml.Urls, loc{u})
+	}
+
+	enc := xml.NewEncoder(os.Stdout)
+	fmt.Print(xml.Header)
+	enc.Indent("", "  ")
+
+	if err := enc.Encode(toXml); err != nil {
+		panic(err)
 	}
 }
 
