@@ -15,15 +15,6 @@ import (
 
 const xmlNs = "http://www.sitemaps.org/schemas/sitemap/0.9"
 
-type loc struct {
-	Value string `xml:"loc"`
-}
-
-type urlset struct {
-	Urls  []loc  `xml:"url"`
-	Xmlns string `xml:"xmlns,attr"`
-}
-
 func main() {
 	urlFlag := flag.String("url", "https://gophercises.com", "URL to build a sitemap for")
 	maxDepth := flag.Int("depth", 3, "The maximum link depth to traverse")
@@ -40,21 +31,7 @@ func main() {
 
 	urls := bfs(*urlFlag, *maxDepth)
 
-	toXml := urlset{
-		Xmlns: xmlNs,
-	}
-
-	for _, u := range urls {
-		toXml.Urls = append(toXml.Urls, loc{u})
-	}
-
-	enc := xml.NewEncoder(os.Stdout)
-	fmt.Print(xml.Header)
-	enc.Indent("", "  ")
-
-	if err := enc.Encode(toXml); err != nil {
-		panic(err)
-	}
+	printLinks(urls)
 }
 
 // We can define a type for an empty struct, to instantiate it we can use empty{}. This is more memory
@@ -81,6 +58,10 @@ func bfs(urlStr string, maxDepth int) []string {
 		// Move nq to q and create an empty map and assign to q
 		q, nq = nq, make(map[string]empty)
 
+		if len(q) == 0 {
+			break
+		}
+
 		// Iterate over the q map
 		for url, _ := range q {
 			// Check if the url value is already in the seen map, if it is ok will be true and we want
@@ -90,9 +71,12 @@ func bfs(urlStr string, maxDepth int) []string {
 			}
 			// If the url has not been seen mark it as seen
 			seen[url] = empty{}
-			// Iterate over the links we get back from the get() method
+			// Iterate over the links we get back from the get() method, if the link is not in the seen
+			// map we want to add it to the nq map
 			for _, link := range get(url) {
-				nq[link] = empty{}
+				if _, ok := seen[link]; !ok {
+					nq[link] = empty{}
+				}
 			}
 		}
 	}
@@ -172,5 +156,35 @@ Function to check if a link has a given prefix (domain)
 func withPrefix(prefix string) func(string) bool {
 	return func(link string) bool {
 		return strings.HasPrefix(link, prefix)
+	}
+}
+
+type loc struct {
+	Value string `xml:"loc"`
+}
+
+type urlset struct {
+	Urls  []loc  `xml:"url"`
+	Xmlns string `xml:"xmlns,attr"`
+}
+
+/*
+Function to print the links to the terminal
+*/
+func printLinks(urls []string) {
+	toXml := urlset{
+		Xmlns: xmlNs,
+	}
+
+	for _, u := range urls {
+		toXml.Urls = append(toXml.Urls, loc{u})
+	}
+
+	enc := xml.NewEncoder(os.Stdout)
+	fmt.Print(xml.Header)
+	enc.Indent("", "  ")
+
+	if err := enc.Encode(toXml); err != nil {
+		panic(err)
 	}
 }
