@@ -1,6 +1,7 @@
 package challenges
 
 import (
+	"fmt"
 	"unicode"
 )
 
@@ -18,4 +19,10 @@ func CamelCase(s string) int32 {
 	}
 
 	return int32(c)
+}
+
+func PrintRunes(s string) {
+	for _, v := range s {
+		fmt.Printf("Rune: %c, Unicode: U+%X\n", v, v)
+	}
 }
