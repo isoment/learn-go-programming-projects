@@ -25,6 +25,9 @@ func main() {
 	if challenge == "CaesarCipher" {
 		r := challenges.CaesarCipher("test", 2)
 		fmt.Printf("CaesarCipher: %s\n", r)
+
+		s := challenges.CaesarCipherTwo("tesT", 2)
+		fmt.Printf("CaesarCipherTwo: %s\n", s)
 	}
 
 	// str := "你好"

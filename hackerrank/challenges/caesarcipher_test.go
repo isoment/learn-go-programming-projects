@@ -28,5 +28,12 @@ func TestCaesarCipher(t *testing.T) {
 				t.Errorf("Expected %v, but got %v", tc.expected, actual)
 			}
 		})
+
+		t.Run(tc.name, func(t *testing.T) {
+			actual := CaesarCipherTwo(tc.s, int(tc.k))
+			if actual != tc.expected {
+				t.Errorf("Expected %v, but got %v", tc.expected, actual)
+			}
+		})
 	}
 }

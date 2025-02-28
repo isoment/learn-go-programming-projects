@@ -1,5 +1,9 @@
 package challenges
 
+import (
+	"strings"
+)
+
 func CaesarCipher(s string, k byte) string {
 	// Capitals 65-90
 	// Lowercase 97-122
@@ -37,4 +41,41 @@ func CaesarCipher(s string, k byte) string {
 	}
 
 	return string(byteString)
+}
+
+/*
+This implementation works with an alphabet
+*/
+func CaesarCipherTwo(s string, k int) string {
+	alphabetLower := "abcdefghijklmnopqrstuvwxyz"
+	alphabetUpper := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	ret := ""
+
+	for _, ch := range s {
+		switch {
+		case strings.ContainsRune(alphabetLower, ch):
+			ret = ret + string(rotate(ch, k, []rune(alphabetLower)))
+		case strings.ContainsRune(alphabetUpper, ch):
+			ret = ret + string(rotate(ch, k, []rune(alphabetUpper)))
+		default:
+			ret = ret + string(ch)
+		}
+	}
+
+	return ret
+}
+
+func rotate(s rune, offset int, alphabet []rune) rune {
+	idx := -1
+	for i, r := range alphabet {
+		if r == s {
+			idx = i
+			break
+		}
+	}
+	if idx < 0 {
+		panic("rune not found in key")
+	}
+	idx = (idx + offset) % len(alphabet)
+	return alphabet[idx]
 }
