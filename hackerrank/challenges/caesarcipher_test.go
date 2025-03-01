@@ -19,20 +19,31 @@ func TestCaesarCipher(t *testing.T) {
 		{"case four", "Hello_World!", 4, "Lipps_Asvph!"},
 		{"case five", "Hello_World!", 0, "Hello_World!"},
 		{"case six", "Hello_World!", 70, "Zwddg_Ogjdv!"},
+		{"case seven", "test👍", 2, "vguv👍"},
 	}
 
 	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			actual := CaesarCipher(tc.s, tc.k)
-			if actual != tc.expected {
-				t.Errorf("Expected %v, but got %v", tc.expected, actual)
-			}
-		})
+		// This solution only supports ASCII chars
+		if tc.name != "case seven" {
+			t.Run(tc.name, func(t *testing.T) {
+				actual := CaesarCipher(tc.s, tc.k)
+				if actual != tc.expected {
+					t.Errorf("CaesarCipher: Expected %v, but got %v", tc.expected, actual)
+				}
+			})
+		}
 
 		t.Run(tc.name, func(t *testing.T) {
 			actual := CaesarCipherTwo(tc.s, int(tc.k))
 			if actual != tc.expected {
-				t.Errorf("Expected %v, but got %v", tc.expected, actual)
+				t.Errorf("CaesarCipherTwo: Expected %v, but got %v", tc.expected, actual)
+			}
+		})
+
+		t.Run(tc.name, func(t *testing.T) {
+			actual := CaesarCipherThree(tc.s, int(tc.k))
+			if actual != tc.expected {
+				t.Errorf("CaesarCipherThree: Expected %v, but got %v", tc.expected, actual)
 			}
 		})
 	}

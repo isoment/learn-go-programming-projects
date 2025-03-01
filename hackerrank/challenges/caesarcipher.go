@@ -79,3 +79,32 @@ func rotate(s rune, offset int, alphabet []rune) rune {
 	idx = (idx + offset) % len(alphabet)
 	return alphabet[idx]
 }
+
+/*
+Another solution
+*/
+func CaesarCipherThree(s string, k int) string {
+	var ret []rune
+
+	for _, c := range s {
+		ret = append(ret, cipher(c, k))
+	}
+
+	return string(ret)
+}
+
+func cipher(r rune, delta int) rune {
+	if r >= 'A' && r <= 'Z' {
+		return rotateBase(r, 'A', delta)
+	}
+	if r >= 'a' && r <= 'z' {
+		return rotateBase(r, 'a', delta)
+	}
+	return r
+}
+
+func rotateBase(r rune, base, delta int) rune {
+	tmp := int(r) - base
+	tmp = (tmp + delta) % 26
+	return rune(tmp + base)
+}
