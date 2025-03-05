@@ -1,0 +1,6 @@
+The cobra package is useful for creating command line applications
+
+    go get -u github.com/spf13/cobra@latest
+
+We can either build the binary using 'go build' which will compile the binary in the current directory. Or we can use 'go install'
+which will compile and install it in central go folder so the program can run anywhere.
