@@ -19,7 +19,6 @@ var doCmd = &cobra.Command{
 				fmt.Println("Failed to parse the argument:", arg)
 			} else {
 				ids = append(ids, id)
-
 			}
 		}
 
