@@ -36,6 +36,7 @@ func CreateTask(task string) (int, error) {
 
 	err := db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(taskBucket)
+		// Create an id for the task which we can use as the key
 		id64, _ := b.NextSequence()
 		id = int(id64)
 		key := itob(int(id64))
@@ -49,13 +50,37 @@ func CreateTask(task string) (int, error) {
 	return id, nil
 }
 
-// Int to byte slice
+func AllTasks() ([]Task, error) {
+	var tasks []Task
+	err := db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(taskBucket)
+		c := b.Cursor()
+
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			tasks = append(tasks, Task{
+				Key:   btoi(k),
+				Value: string(v),
+			})
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tasks, nil
+}
+
+// Int to byte slice, BoldDB only works with byte slices
 func itob(v int) []byte {
 	b := make([]byte, 8)
 	binary.BigEndian.PutUint64(b, uint64(v))
 	return b
 }
 
+// Convert byte slice to int.
 func btoi(b []byte) int {
 	return int(binary.BigEndian.Uint64(b))
 }
