@@ -73,6 +73,14 @@ func AllTasks() ([]Task, error) {
 	return tasks, nil
 }
 
+func DeleteTask(key int) error {
+	err := db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket(taskBucket)
+		return b.Delete(itob(key))
+	})
+	return err
+}
+
 // Int to byte slice, BoldDB only works with byte slices
 func itob(v int) []byte {
 	b := make([]byte, 8)

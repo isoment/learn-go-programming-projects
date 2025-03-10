@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
+	"github.com/isoment/taskmaster/db"
 	"github.com/spf13/cobra"
 )
 
@@ -10,7 +12,21 @@ var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "Lists all of the available tasks",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("list called")
+		tasks, err := db.AllTasks()
+		if err != nil {
+			fmt.Println("There was an error getting tasks: ", err.Error())
+			os.Exit(1)
+		}
+
+		if len(tasks) == 0 {
+			fmt.Println("All your tasks have been completed!")
+			return
+		}
+
+		fmt.Println("These tasks still need to be completed...")
+		for i, task := range tasks {
+			fmt.Printf("%d. %s\n", i+1, task.Value)
+		}
 	},
 }
 
