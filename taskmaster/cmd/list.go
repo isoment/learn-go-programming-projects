@@ -14,7 +14,7 @@ var listCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		tasks, err := db.AllTasks()
 		if err != nil {
-			fmt.Println("There was an error getting tasks: ", err.Error())
+			fmt.Println("There was an error getting tasks: ", err)
 			os.Exit(1)
 		}
 
@@ -25,7 +25,7 @@ var listCmd = &cobra.Command{
 
 		fmt.Println("These tasks still need to be completed...")
 		for i, task := range tasks {
-			fmt.Printf("%d. %s\n", i+1, task.Value)
+			fmt.Printf("%d. %s, Key:%d\n", i+1, task.Value, task.Key)
 		}
 	},
 }
