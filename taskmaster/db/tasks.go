@@ -2,6 +2,8 @@ package db
 
 import (
 	"encoding/binary"
+	"encoding/json"
+	"time"
 
 	"github.com/boltdb/bolt"
 )
@@ -9,14 +11,19 @@ import (
 var taskBucket = []byte("tasks")
 var db *bolt.DB
 
+type TaskBody struct {
+	Description string     `json:"description"`
+	CompletedAt *time.Time `json:"completed_at,omitempty"`
+}
+
 type Task struct {
 	Key   int
-	Value string
+	Value TaskBody
 }
 
 // This is not the same as the built in init() function. It will not get called autmatically.
 func Init(dbPath string) error {
-	// Declare the error ahead of time so we can assign the the bold instance to the package
+	// Declare the error ahead of time so we can assign the the bolt instance to the package
 	// level db variable.
 	var err error
 
@@ -31,7 +38,7 @@ func Init(dbPath string) error {
 	})
 }
 
-func CreateTask(task string) (int, error) {
+func CreateTask(taskDescription string) (int, error) {
 	var id int
 
 	err := db.Update(func(tx *bolt.Tx) error {
@@ -40,7 +47,17 @@ func CreateTask(task string) (int, error) {
 		id64, _ := b.NextSequence()
 		id = int(id64)
 		key := itob(int(id64))
-		return b.Put(key, []byte(task))
+
+		taskBody := TaskBody{
+			Description: taskDescription,
+		}
+
+		// Marshal the TaskBody struct to JSON
+		taskJSON, err := json.Marshal(taskBody)
+		if err != nil {
+			return err // Return error if marshaling fails
+		}
+		return b.Put(key, taskJSON) // Store JSON in BoltDB
 	})
 
 	if err != nil {
@@ -57,9 +74,11 @@ func AllTasks() ([]Task, error) {
 		c := b.Cursor()
 
 		for k, v := c.First(); k != nil; k, v = c.Next() {
+			var taskBody TaskBody
+			_ = json.Unmarshal(v, &taskBody)
 			tasks = append(tasks, Task{
 				Key:   btoi(k),
-				Value: string(v),
+				Value: taskBody,
 			})
 		}
 

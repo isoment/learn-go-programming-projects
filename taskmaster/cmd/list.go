@@ -25,7 +25,7 @@ var listCmd = &cobra.Command{
 
 		fmt.Println("These tasks still need to be completed...")
 		for i, task := range tasks {
-			fmt.Printf("%d. %s, Key:%d\n", i+1, task.Value, task.Key)
+			fmt.Printf("%d. %s, Key:%d\n", i+1, task.Value.Description, task.Key)
 		}
 	},
 }
