@@ -92,6 +92,31 @@ func AllTasks() ([]Task, error) {
 	return tasks, nil
 }
 
+func CompleteTask(key int) error {
+	err := db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket(taskBucket)
+		bsKey := itob(key)
+
+		// Unmarshal the JSON task body
+		var taskBody TaskBody
+		v := b.Get(bsKey)
+		_ = json.Unmarshal(v, &taskBody)
+
+		// Set the complete time in UTC
+		now := time.Now().UTC()
+		taskBody.CompletedAt = &now
+
+		// Marshal the JSON Task body
+		taskJSON, err := json.Marshal(taskBody)
+		if err != nil {
+			return err
+		}
+
+		return b.Put(bsKey, taskJSON)
+	})
+	return err
+}
+
 func DeleteTask(key int) error {
 	err := db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(taskBucket)
