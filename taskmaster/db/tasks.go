@@ -92,6 +92,38 @@ func AllTasks() ([]Task, error) {
 	return tasks, nil
 }
 
+func CompletedTasks() ([]Task, error) {
+	var tasks []Task
+	err := db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(taskBucket)
+		c := b.Cursor()
+
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			var taskBody TaskBody
+			_ = json.Unmarshal(v, &taskBody)
+
+			if taskBody.CompletedAt != nil {
+				currentTime := time.Now().UTC()
+				completedTime := taskBody.CompletedAt
+				if currentTime.Sub(*completedTime) <= 24*time.Hour {
+					tasks = append(tasks, Task{
+						Key:   btoi(k),
+						Value: taskBody,
+					})
+				}
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tasks, nil
+}
+
 func CompleteTask(key int) error {
 	err := db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(taskBucket)
